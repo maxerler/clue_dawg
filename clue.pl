@@ -2,8 +2,8 @@
 
 /* 
 MAX ERLER
-Student #:
-CPSC ID:
+Student #: 59661108
+CPSC ID: c2w7
 
 THEA SIMPSON
 Student #: 51919108
@@ -51,9 +51,11 @@ clue :- init,
 
 % Setup functions ==========================================================================================================
 % initializes the game
-init :- init_all_suspects,
+init :- clear_state,
+        init_all_suspects,
         prompt_num_players,
-        prompt_character.
+        %prompt_character, % I don't think we actually care who we're playing as, so I'll comment this out for now.
+        prompt_cards.
 
 % prompts the user for the number of players and sets the player number
 prompt_num_players :- write('How many players are there?\n'),
@@ -73,10 +75,24 @@ prompt_character :- write('Who is your character?\n'),
 set_character(end_of_file) :- !.
 set_character(Character) :- character(Character),assert(our_character(Character)).
 
-% deal cards
-/* TO DO */
+% prompts the user for their cards
+prompt_cards :- write('What are your cards?\n'),
+                read(Cards),
+                remove_initial_cards(Cards).
+                
+% removes the user's cards from the list of suspects
+remove_initial_cards(end_of_file) :- !.
+remove_initial_cards(Cards) :- atomic_list_concat(L, ' ', Cards),
+                               remove_cards(L).
+                
 
-% Dynamic variable setup functions ==============================================================================================
+% Teardown functions =======================================================================================================
+% clears all suspect facts
+clear_state :- retractall(suspect_weapon(_)),
+               retractall(suspect_character(_)),
+               retractall(suspect_room(_)).
+
+% Dynamic variable setup functions =========================================================================================
 
 % intialize all suspect weapons, characters and rooms
 init_all_suspects :- init_suspect_w, init_suspect_c, init_suspect_r.
@@ -114,17 +130,24 @@ loop :- write('Enter a command\n'),read(Data),process(Data).
 
 % Processing functions =====================================================================================================
 process(done) :- !.
-process(Data) :- atomic_list_concat([H|T], ' ', Data), process(H, T).
+process(Data) :- atomic_list_concat([H|T], ' ', Data), process(H, T),loop.
 
-process(a, Data) :- write(Data),write('\n'),loop.
+process(a, Data) :- write(Data),write('\n').
 
+process(suspect, [S]) :- is_suspect(S),write('  Yes\n').
+process(suspect, _) :- write('  No\n').
 
-% Player action functions =====================================================================================================
+% Player action functions ==================================================================================================
 
 % suggest a guess based on the weapons, characters and rooms that are still possible suspects
 suggestGuess(W, C, R) :- possibleWeapon(W), possibleCharacter(C), possibleRoom(R).
 
-% Check remaining suspects functions ==========================================================================================
+% Check remaining suspects functions =======================================================================================
+
+% checks to see if the given character, weapon, or room is still a suspect
+is_suspect(S) :- character(S),possibleCharacter(S).
+is_suspect(S) :- weapon(S),possibleWeapon(S).
+is_suspect(S) :- room(S),possibleRoom(S).
 
 % check if a weapon is still a suspect
 possibleWeapon(W) :- weapon(W), suspect_weapon(W).
@@ -134,3 +157,16 @@ possibleCharacter(C) :- character(C), suspect_character(C).
 
 % check if a room is still a suspect
 possibleRoom(R) :- room(R), suspect_room(R).
+
+% Suspect card removal functions ===========================================================================================
+
+% removes a list of cards from the suspect list
+remove_cards([]).
+remove_cards([H|T]) :- remove_suspect(H),remove_cards(T).
+
+% removes a suspect character, weapon, or room from the list of suspects
+remove_suspect(Suspect) :- character(Suspect),retract(suspect_character(Suspect)).
+remove_suspect(Suspect) :- weapon(Suspect),retract(suspect_weapon(Suspect)).
+remove_suspect(Suspect) :- room(Suspect),retract(suspect_room(Suspect)).
+
+
