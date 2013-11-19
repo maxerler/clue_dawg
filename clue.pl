@@ -70,6 +70,9 @@ prompt_character :- write('Who is your character?\n'),
 set_character(end_of_file) :- !.
 set_character(Character) :- character(Character),assert(our_character(Character)).
 
+% deal cards
+/* TO DO */
+
 % Dynamic variable setup functions ==============================================================================================
 
 % intialize all suspect weapons, characters and rooms
