@@ -46,12 +46,15 @@ room(lounge).
 room(dining_room).
 
 % Main function ============================================================================================================
-clue :- set_all_suspects,
-		prompt_num_players,
-        prompt_character,
+clue :- init,
         loop.
 
 % Setup functions ==========================================================================================================
+% initializes the game
+init :- set_all_suspects,
+        prompt_num_players,
+        prompt_character.
+
 % prompts the user for the number of players and sets the player number
 prompt_num_players :- write('How many players are there?\n'),
                       read(Players),
