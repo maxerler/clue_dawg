@@ -51,7 +51,7 @@ clue :- init,
 
 % Setup functions ==========================================================================================================
 % initializes the game
-init :- set_all_suspects,
+init :- init_all_suspects,
         prompt_num_players,
         prompt_character.
 
@@ -79,35 +79,35 @@ set_character(Character) :- character(Character),assert(our_character(Character)
 % Dynamic variable setup functions ==============================================================================================
 
 % intialize all suspect weapons, characters and rooms
-set_all_suspects :- set_suspect_w, set_suspect_c, set_suspect_r.
+init_all_suspects :- init_suspect_w, init_suspect_c, init_suspect_r.
 
 % intialize list of suspect weapons
-set_suspect_w :- assert(suspect_weapon(dagger)),
-				 assert(suspect_weapon(rope)),
-				 assert(suspect_weapon(pipe)), 
-				 assert(suspect_weapon(candlestick)),
-				 assert(suspect_weapon(revolver)),
-				 assert(suspect_weapon(wrench)).
+init_suspect_w :- assert(suspect_weapon(dagger)),
+				          assert(suspect_weapon(rope)),
+				          assert(suspect_weapon(pipe)), 
+				          assert(suspect_weapon(candlestick)),
+				          assert(suspect_weapon(revolver)),
+				          assert(suspect_weapon(wrench)).
 
 % intialize list of suspect characters
-set_suspect_c :- assert(suspect_character(miss_scarlet)), 
-				 assert(suspect_character(colonel_mustard)), 
-				 assert(suspect_character(mrs_white)),
-				 assert(suspect_character(mr_green)),
-				 assert(suspect_character(mrs_peacock)),
-				 assert(suspect_character(professor_plum)),
-				 assert(suspect_character(mr_boddy)). 
+init_suspect_c :- assert(suspect_character(miss_scarlet)), 
+				          assert(suspect_character(colonel_mustard)), 
+				          assert(suspect_character(mrs_white)),
+				          assert(suspect_character(mr_green)),
+				          assert(suspect_character(mrs_peacock)),
+				          assert(suspect_character(professor_plum)),
+				          assert(suspect_character(mr_boddy)). 
 
 % intialize list of suspect rooms
-set_suspect_r :- assert(suspect_room(kitchen)),
-				 assert(suspect_room(ballroom)),
-				 assert(suspect_room(conservatory)),
-				 assert(suspect_room(billiard_room)),
-				 assert(suspect_room(library)),
-				 assert(suspect_room(study)),
-				 assert(suspect_room(hall)),
-				 assert(suspect_room(lounge)),
-				 assert(suspect_room(dining_room)).
+init_suspect_r :- assert(suspect_room(kitchen)),
+				          assert(suspect_room(ballroom)),
+				          assert(suspect_room(conservatory)),
+				          assert(suspect_room(billiard_room)),
+				          assert(suspect_room(library)),
+				          assert(suspect_room(study)),
+				          assert(suspect_room(hall)),
+				          assert(suspect_room(lounge)),
+				          assert(suspect_room(dining_room)).
 
 % Loop function ============================================================================================================
 loop :- write('Enter a command\n'),read(Data),process(Data).
