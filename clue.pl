@@ -74,6 +74,7 @@ clear_state :- retractall(suspect_weapon(_)),
 % intialize all suspect weapons, characters and rooms
 init_all_suspects :- init_suspect_w, init_suspect_c, init_suspect_r.
 
+
 % intialize list of suspect weapons
 init_suspect_w :- assert(suspect_weapon(dagger)),
 				          assert(suspect_weapon(rope)),
@@ -81,6 +82,7 @@ init_suspect_w :- assert(suspect_weapon(dagger)),
 				          assert(suspect_weapon(candlestick)),
 				          assert(suspect_weapon(revolver)),
 				          assert(suspect_weapon(wrench)).
+				          
 
 % intialize list of suspect characters
 init_suspect_c :- assert(suspect_character(miss_scarlet)), 
@@ -88,8 +90,8 @@ init_suspect_c :- assert(suspect_character(miss_scarlet)),
 				          assert(suspect_character(mrs_white)),
 				          assert(suspect_character(mr_green)),
 				          assert(suspect_character(mrs_peacock)),
-				          assert(suspect_character(professor_plum)),
-				          assert(suspect_character(mr_boddy)). 
+				          assert(suspect_character(professor_plum)).
+				          
 
 % intialize list of suspect rooms
 init_suspect_r :- assert(suspect_room(kitchen)),
