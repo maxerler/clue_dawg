@@ -72,11 +72,11 @@ init_all_suspects :- init_suspect_w, init_suspect_c, init_suspect_r.
 
 
 % intialize list of suspect weapons
-init_suspect_w :- assert(suspect_weapon(dagger)),
-				          assert(suspect_weapon(rope)),
-				          assert(suspect_weapon(pipe)), 
+init_suspect_w :- assert(suspect_weapon(rope)),
+				          assert(suspect_weapon(pipe)),
+				          assert(suspect_weapon(knife)), 
 				          assert(suspect_weapon(candlestick)),
-				          assert(suspect_weapon(revolver)),
+				          assert(suspect_weapon(pistol)),
 				          assert(suspect_weapon(wrench)).
 				          
 
