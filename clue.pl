@@ -16,9 +16,15 @@ CPSC ID: k8r7
            suspect_weapon/1,
            suspect_character/1,
            suspect_room/1,
-           player_has/2.
+           player_has/2,
+           player_asked_for/2.
+           
+           
+% ==========================================================================================================================
+% Database section =========================================================================================================
+% ==========================================================================================================================
 
-% Database section
+
 /* NOTE: THESE MAY OR MAY NOT BE CORRECT; I LOOKED THEM UP ON WIKIPEDIA, SO WE
  *       MIGHT NEED TO UPDATE THEM WITH THE ACTUAL NAMES FROM THE RULES.
  */
@@ -45,6 +51,57 @@ room(study).
 room(hall).
 room(lounge).
 room(dining_room).
+
+% ==========================================================================================================================
+% Teardown functions =======================================================================================================
+% ==========================================================================================================================
+
+
+% clears all suspect facts
+clear_state :- retractall(suspect_weapon(_)),
+               retractall(suspect_character(_)),
+               retractall(suspect_room(_)),
+               retractall(player(_)),
+               retractall(player_has(_, _)),
+               retractall(player_asked_for(_, _)).
+
+
+% ==========================================================================================================================
+% Dynamic variable setup functions =========================================================================================
+% ==========================================================================================================================
+
+
+% intialize all suspect weapons, characters and rooms
+init_all_suspects :- init_suspect_w, init_suspect_c, init_suspect_r.
+
+% intialize list of suspect weapons
+init_suspect_w :- assert(suspect_weapon(dagger)),
+				          assert(suspect_weapon(rope)),
+				          assert(suspect_weapon(pipe)), 
+				          assert(suspect_weapon(candlestick)),
+				          assert(suspect_weapon(revolver)),
+				          assert(suspect_weapon(wrench)).
+
+% intialize list of suspect characters
+init_suspect_c :- assert(suspect_character(miss_scarlet)), 
+				          assert(suspect_character(colonel_mustard)), 
+				          assert(suspect_character(mrs_white)),
+				          assert(suspect_character(mr_green)),
+				          assert(suspect_character(mrs_peacock)),
+				          assert(suspect_character(professor_plum)),
+				          assert(suspect_character(mr_boddy)). 
+
+% intialize list of suspect rooms
+init_suspect_r :- assert(suspect_room(kitchen)),
+				          assert(suspect_room(ballroom)),
+				          assert(suspect_room(conservatory)),
+				          assert(suspect_room(billiard_room)),
+				          assert(suspect_room(library)),
+				          assert(suspect_room(study)),
+				          assert(suspect_room(hall)),
+				          assert(suspect_room(lounge)),
+				          assert(suspect_room(dining_room)).
+
 
 % ==========================================================================================================================
 % Main function ============================================================================================================
@@ -123,54 +180,6 @@ remove_initial_cards(Cards) :- atomic_list_concat(L, ' ', Cards),
                 
 
 % ==========================================================================================================================
-% Teardown functions =======================================================================================================
-% ==========================================================================================================================
-
-
-% clears all suspect facts
-clear_state :- retractall(suspect_weapon(_)),
-               retractall(suspect_character(_)),
-               retractall(suspect_room(_)).
-
-
-% ==========================================================================================================================
-% Dynamic variable setup functions =========================================================================================
-% ==========================================================================================================================
-
-
-% intialize all suspect weapons, characters and rooms
-init_all_suspects :- init_suspect_w, init_suspect_c, init_suspect_r.
-
-% intialize list of suspect weapons
-init_suspect_w :- assert(suspect_weapon(dagger)),
-				          assert(suspect_weapon(rope)),
-				          assert(suspect_weapon(pipe)), 
-				          assert(suspect_weapon(candlestick)),
-				          assert(suspect_weapon(revolver)),
-				          assert(suspect_weapon(wrench)).
-
-% intialize list of suspect characters
-init_suspect_c :- assert(suspect_character(miss_scarlet)), 
-				          assert(suspect_character(colonel_mustard)), 
-				          assert(suspect_character(mrs_white)),
-				          assert(suspect_character(mr_green)),
-				          assert(suspect_character(mrs_peacock)),
-				          assert(suspect_character(professor_plum)),
-				          assert(suspect_character(mr_boddy)). 
-
-% intialize list of suspect rooms
-init_suspect_r :- assert(suspect_room(kitchen)),
-				          assert(suspect_room(ballroom)),
-				          assert(suspect_room(conservatory)),
-				          assert(suspect_room(billiard_room)),
-				          assert(suspect_room(library)),
-				          assert(suspect_room(study)),
-				          assert(suspect_room(hall)),
-				          assert(suspect_room(lounge)),
-				          assert(suspect_room(dining_room)).
-
-
-% ==========================================================================================================================
 % Loop function ============================================================================================================
 % ==========================================================================================================================
 
@@ -193,12 +202,23 @@ process('suspect?', [S]) :- is_suspect(S),write('  Yes\n').
 process('suspect?', _) :- write('  No\n').
 
 
+% processes a shown command and keeps track of the cards that player Player has shown us
 process('shown', [Player, Card]) :- atom_number(Player, Number),
                                     player(Number), 
                                     player_has_card(Number, Card),
-                                    write('  Player '),write(Player), write(' has '), write(Card), write('\n').
+                                    write('  Player '), write(Player), write(' has '), write(Card), write('\n').
 process('shown', _) :- write('  Error!\n').
-                                    
+
+
+% processes an asked_for command and keeps track of the cards that player Player has asked for
+process('asked_for', [Player, Card1, Card2, Card3]) :- atom_number(Player, Number),
+                                                       player(Number),
+                                                       Cards = [Card1, Card2, Card3],
+                                                       player_asked_for_cards(Number, Cards),
+                                                       write('  Player '), write(Player), 
+                                                       write(' asked for '), write(Cards), write('\n').
+process('asked_for', _) :- write('  Error!\n').
+
 
 % ==========================================================================================================================
 % Player action functions ==================================================================================================
@@ -257,6 +277,16 @@ remove_suspect(Suspect) :- room(Suspect), !, retract(suspect_room(Suspect)).
 player_has_card(Player, Card) :- player(Player), remove_suspect(Card), assert(player_has(Player, Card)).
 
 
+% keeps track of the cards that a certain player has asked for
+player_asked_for_cards(_, []).
+player_asked_for_cards(Player, [Card|T]) :- player(Player),
+                                            ( 
+                                              player_asked_for(Player, Card)
+                                              -> player_asked_for_cards(Player, T)
+                                              ; assert(player_asked_for(Player, Card)), player_asked_for_cards(Player, T)
+                                            ).
+                                           
+                                          
 % create players at beginning of game
 set_player_characters([]).
 set_player_characters([H|T]) :- set_player(H),set_player_characters(T).
