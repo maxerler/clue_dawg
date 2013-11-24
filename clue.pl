@@ -218,6 +218,10 @@ process('asked_for', [Player, Card1, Card2, Card3]) :- atom_number(Player, Numbe
 process('asked_for', _) :- write('  Error!\n').
 
 
+process('show_cards', [Player]) :- atom_number(Player, Number),
+                                   findall(Card, player_has(Number, Card), Cards),
+                                   write_cards(Cards).
+
 % ==========================================================================================================================
 % Player action functions ==================================================================================================
 % ==========================================================================================================================
@@ -289,4 +293,93 @@ player_asked_for_cards(Player, [Card|T]) :- player(Player),
 set_player_characters([]).
 set_player_characters([H|T]) :- set_player(H),set_player_characters(T).
 
-%
+
+% ==========================================================================================================================
+% HELPER FUNCTIONS =========================================================================================================
+% ==========================================================================================================================
+
+
+% writes out a list of cards
+write_cards([]).
+write_cards([H|T]) :- write('  '),
+                      write(H),
+                      write('\n'),
+                      write_cards(T).
+                      
+                      
+get_all_characters(Characters) :- findall(Char, character(Char), Characters).           
+
+
+get_all_weapons(Weapons) :- findall(Weapon, weapon(Weapon), Weapons).
+
+
+get_all_rooms(Rooms) :- findall(Room, room(Room), Rooms).           
+                      
+                      
+% ==========================================================================================================================
+% I/O UI FUNCTIONS =========================================================================================================
+% ==========================================================================================================================
+
+
+% prompts the user to input a card
+prompt_card(Card) :- write('  What kind of card?\n'),
+                     write('    1) character\n'),
+                     write('    2) room\n'),
+                     write('    3) weapon\n'),
+                     read(Index),
+                     prompt_card_kind(Index, Card).
+                     
+                     
+% prompts the user to input the kind of card associated with that index
+prompt_card_kind(1, Card) :- prompt_suspect_character(Card).
+prompt_card_kind(2, Card) :- prompt_suspect_room(Card).
+prompt_card_kind(3, Card) :- prompt_suspect_weapon(Card).
+
+
+% prompts the user to input a character card
+prompt_suspect_character(Character) :- write('  Choose a character:\n'),
+                                       get_all_characters(Characters),
+                                       write_suspect_options(1, Characters),
+                                       read(Index),
+                                       get_suspect(Index, Characters, Character).
+                                       
+
+% prompts the user to input a weapon card
+prompt_suspect_weapon(Weapon) :- write('  Choose a weapon:\n'),
+                                 get_all_weapons(Weapons),
+                                 write_suspect_options(1, Weapons),
+                                 read(Index),
+                                 get_suspect(Index, Weapons, Weapon).    
+                                     
+                                     
+% prompts the user to input a room card
+prompt_suspect_room(Room) :- write('  Choose a room:\n'),
+                             get_all_rooms(Rooms),
+                             write_suspect_options(1, Rooms),
+                             read(Index),
+                             get_suspect(Index, Rooms, Room).                                       
+                                       
+                            
+% gets the suspect card at the given index in the supplied list of suspects
+get_suspect(1, [H|_], Suspect) :- Suspect = H.                            
+get_suspect(Index, [_|T], Suspect) :- NextIndex is Index - 1,
+                                      get_suspect(NextIndex, T, Suspect).
+              
+              
+% writes out an option for a suspect list
+write_suspect_option(N, Suspect) :- write('    '), 
+                                    write(N), 
+                                    write(') '), 
+                                    write(Suspect),
+                                    write('\n').
+                             
+
+% writes out all of the options for a suspect list        
+write_suspect_options(_, []).
+write_suspect_options(N, [H|T]) :- write_suspect_option(N, H),
+                                   Next is N + 1,
+                                   write_suspect_options(Next, T).
+
+
+
+
