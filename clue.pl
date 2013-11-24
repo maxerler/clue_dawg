@@ -24,10 +24,6 @@ CPSC ID: k8r7
 % Database section =========================================================================================================
 % ==========================================================================================================================
 
-
-/* NOTE: THESE MAY OR MAY NOT BE CORRECT; I LOOKED THEM UP ON WIKIPEDIA, SO WE
- *       MIGHT NEED TO UPDATE THEM WITH THE ACTUAL NAMES FROM THE RULES.
- */
 character(miss_scarlet).
 character(colonel_mustard).
 character(mrs_white).
@@ -35,11 +31,11 @@ character(mr_green).
 character(mrs_peacock).
 character(professor_plum).
 
-weapon(dagger).
 weapon(rope).
 weapon(pipe).
+weapon(knife).
 weapon(candlestick).
-weapon(revolver).
+weapon(pistol).
 weapon(wrench).
 
 room(kitchen).
