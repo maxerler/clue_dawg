@@ -28,7 +28,6 @@ character(mrs_white).
 character(mr_green).
 character(mrs_peacock).
 character(professor_plum).
-character(mr_boddy). % I think these are all correct apart from this dude ... defs never heard of him
 
 weapon(dagger).
 weapon(rope).
@@ -260,6 +259,6 @@ player_has_card(Player, Card) :- player(Player), remove_suspect(Card), assert(pl
 
 % create players at beginning of game
 set_player_characters([]).
-set_player_characters([H|T]) :- assert(player_character(H)),set_player_characters(T).
+set_player_characters([H|T]) :- set_player(H),set_player_characters(T).
 
 %
