@@ -11,6 +11,7 @@ CPSC ID: k8r7
 */
 
 :- dynamic player/1,
+		   num_players/1,
            our_character/1,
            suspect_weapon/1,
            suspect_character/1,
@@ -124,14 +125,14 @@ init :- clear_state,
 
 
 % prompts the user for the number of players and sets the player number
-prompt_num_players :- write('How many players are there?\n'),
-                      read(Players).
-                      %set_num_players(Players). *** ALSO NEEDS TO BE FIXED NOW THAT PLAYERS ARE CHARACTERS
+prompt_num_players :- write('How many other players are there?\n'),
+                      read(Players),
+                      set_num_players(Players).
                    
 
-/*% sets the number of players
+% sets the number of players
 set_num_players(end_of_file) :- !.
-set_num_players(Players) :- init_players(Players).*/
+set_num_players(Players) :- assert(num_players(Players)).
 
 
 % prompts the user for the name of their character
@@ -143,21 +144,6 @@ prompt_character :- write('Who is your character?\n'),
 % sets the user's character
 set_character(end_of_file) :- !.
 set_character(Character) :- character(Character),assert(our_character(Character)).
-
-
-/*% prompts the user for the names of the other players' characters
-prompt_characters :- write('Who are the others characters?\n'),
-                    read(Characters),
-                    set_characters(Characters).
-
-
-% sets the other players' characters
-set_characters(end_of_file) :- !.
-set_characters(Characters) :- atomic_list_concat(L, ' ', Characters),
-								Index is Number - 1,
-								element_at(Index, Characters, Character),
-								set_player_characters(L).*/
-
 
 % prompts the user for their cards
 prompt_cards :- write('What are your cards?\n'),
@@ -293,18 +279,11 @@ remove_suspect(Suspect) :- room(Suspect), !, retract(suspect_room(Suspect)).
 % Track player's cards functions ===========================================================================================
 % ==========================================================================================================================
 
-                                          
-% create players at beginning of game
-set_player_characters([], _).
-set_player_characters([H|T], Characters) :- 
-								atom_number(H, Number),
-								Index is Number - 1,
-								element_at(Index, Characters, Character),
-								set_player(Character),
-								set_player_characters(T, Characters).
-
 % set a character as a player active in the game
-set_player(Character) :- character(Character), assert(player(Character)).
+set_player(Number, Characters) :- Index is Number - 1,
+								  element_at(Index, Characters, Character),
+								  character(Character),
+								  assert(player(Character)).
 
 % removes the given card from the list of suspect cards and tracks which player showed us that card
 player_has_card(Player, Card) :- player(Player), remove_suspect(Card), assert(player_has(Player, Card)).
@@ -377,17 +356,19 @@ element_at(Index, [_|T], Elem) :- NextIndex is Index - 1,
 % ==========================================================================================================================
 
 % prompts the user to input the other player's characters
-prompt_characters :- write('\n  Choose other players characters:\n'),
+prompt_characters :- write('\n  Choose other players\' characters:\n'),
 												   get_all_characters(Characters),
                                                    write_options(1, Characters),
                                                    write('\n'),
-                                                   read(SelectedCharacters),
-                                                   set_characters(SelectedCharacters, Characters).
+                                				   num_players(Number),
+                                                   get_characters(Number, Characters).
 
-% sets the other players' characters
-set_characters(end_of_file, _) :- !.
-set_characters(SelectedCharacters, Characters) :-  atomic_list_concat(L, ' ', SelectedCharacters),
-												   set_player_characters(L, Characters).
+% loop prompts user for player characters based on number of players in the game
+get_characters(0, _).
+get_characters(Number, Characters) :- read(Player),
+								      set_player(Player, Characters),
+								      New is Number - 1,
+								      get_characters(New, Characters).
 
 % prompts the user to input a player 
 prompt_player(Player) :- write('\n  Which player?\n'),
