@@ -12,7 +12,6 @@ CPSC ID: k8r7
 
 :- dynamic player/1,
            our_character/1,
-           player_character/1,
            suspect_weapon/1,
            suspect_character/1,
            suspect_room/1,
@@ -119,27 +118,20 @@ clue :- init,
 init :- clear_state,
         init_all_suspects,
         prompt_num_players,
-        %prompt_characters,
+        prompt_characters,
         %prompt_character, % I don't think we actually care who we're playing as, so I'll comment this out for now.
         prompt_cards.
 
 
 % prompts the user for the number of players and sets the player number
 prompt_num_players :- write('How many players are there?\n'),
-                      read(Players),
-                      set_num_players(Players).
+                      read(Players).
+                      %set_num_players(Players). *** ALSO NEEDS TO BE FIXED NOW THAT PLAYERS ARE CHARACTERS
                    
 
-% sets the number of players
+/*% sets the number of players
 set_num_players(end_of_file) :- !.
-set_num_players(Players) :- init_players(Players).
-
-
-% initializes all players
-init_players(1) :- assert(player(1)).
-init_players(N) :- assert(player(N)),
-                   X is N - 1,
-                   init_players(X).
+set_num_players(Players) :- init_players(Players).*/
 
 
 % prompts the user for the name of their character
@@ -161,7 +153,7 @@ prompt_characters :- write('Who are the others characters?\n'),
 
 % sets the other players' characters
 set_characters(end_of_file) :- !.
-set_characters(Characters) :- atomic_list_concat(L, ', ', Characters),
+set_characters(Characters) :- atomic_list_concat(L, ' ', Characters),
                                set_player_characters(L).
 
 
@@ -299,6 +291,13 @@ remove_suspect(Suspect) :- room(Suspect), !, retract(suspect_room(Suspect)).
 % Track player's cards functions ===========================================================================================
 % ==========================================================================================================================
 
+                                          
+% create players at beginning of game
+set_player_characters([]).
+set_player_characters([H|T]) :- set_player(H),set_player_characters(T).
+
+% set a character as a player active in the game
+set_player(Character) :- character(Character), assert(player(Character)).
 
 % removes the given card from the list of suspect cards and tracks which player showed us that card
 player_has_card(Player, Card) :- player(Player), remove_suspect(Card), assert(player_has(Player, Card)).
@@ -313,10 +312,6 @@ player_asked_for_cards(Player, [Card|T]) :- player(Player),
                                               ; assert(player_asked_for(Player, Card)), player_asked_for_cards(Player, T)
                                             ).
                                            
-                                          
-% create players at beginning of game
-set_player_characters([]).
-set_player_characters([H|T]) :- set_player(H),set_player_characters(T).
 
 
 % ==========================================================================================================================
