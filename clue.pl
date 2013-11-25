@@ -182,7 +182,7 @@ remove_initial_cards(Cards) :- atomic_list_concat(L, ' ', Cards),
 % ==========================================================================================================================
 
 
-loop :- write('Enter a command\n'),read(Data),process(Data).
+loop :- write('Enter a command:\n'),read(Data),process(Data).
 
 
 % ==========================================================================================================================
@@ -195,17 +195,17 @@ process(done) :- !.
 process(Data) :- atomic_list_concat([H|T], ' ', Data), process(H, T),loop.
 
 
+% processes a shown command and keeps track of the cards that player Player has shown us
+process(shown) :- prompt_player(Player),
+                  prompt_card_remaining_cards(Card), 
+                  player_has_card(Player, Card),
+                  write('  Player '), write(Player), write(' has '), write(Card), write('\n'),
+                  loop.
+
+
 % processes a suspect? command and tells whether the given card is still suspected
 process('suspect?', [S]) :- is_suspect(S),write('  Yes\n').
 process('suspect?', _) :- write('  No\n').
-
-
-% processes a shown command and keeps track of the cards that player Player has shown us
-process('shown', [Player, Card]) :- atom_number(Player, Number),
-                                    player(Number), 
-                                    player_has_card(Number, Card),
-                                    write('  Player '), write(Player), write(' has '), write(Card), write('\n').
-process('shown', _) :- write('  Error!\n').
 
 
 % processes an asked_for command and keeps track of the cards that player Player has asked for
@@ -307,6 +307,9 @@ write_cards([H|T]) :- write('  '),
                       write_cards(T).
                       
                       
+get_all_players(Players) :- findall(Player, player(Player), Players).                      
+                      
+                      
 get_all_characters(Characters) :- findall(Char, character(Char), Characters).           
 
 
@@ -316,69 +319,102 @@ get_all_weapons(Weapons) :- findall(Weapon, weapon(Weapon), Weapons).
 get_all_rooms(Rooms) :- findall(Room, room(Room), Rooms).           
                       
                       
+get_remaining_characters(Characters) :- findall(Char, suspect_character(Char), Characters).           
+
+
+get_remaining_weapons(Weapons) :- findall(Weapon, suspect_weapon(Weapon), Weapons).      
+
+
+get_remaining_rooms(Rooms) :- findall(Room, suspect_room(Room), Rooms). 
+     
+     
+% gets the element at the given index in the supplied list
+element_at(0, [H|_], Suspect) :- Suspect = H.                            
+element_at(Index, [_|T], Suspect) :- NextIndex is Index - 1,
+                                     element_at(NextIndex, T, Suspect).
+
+                      
 % ==========================================================================================================================
 % I/O UI FUNCTIONS =========================================================================================================
 % ==========================================================================================================================
 
 
+% prompts the user to input a player 
+prompt_player(Player) :- write('  Which player?\n'),
+                         get_all_players(Players),
+                         write_options(1, Players),
+                         read(Number),
+                         Index is Number - 1,
+                         element_at(Index, Players, Player).
+
+
 % prompts the user to input a card
-prompt_card(Card) :- write('  What kind of card?\n'),
-                     write('    1) character\n'),
-                     write('    2) room\n'),
-                     write('    3) weapon\n'),
-                     read(Index),
-                     prompt_card_kind(Index, Card).
+prompt_card_all_cards(Card) :- write('  What kind of card?\n'),
+                               write('    1) character\n'),
+                               write('    2) room\n'),
+                               write('    3) weapon\n'),
+                               read(Number),
+                               prompt_card_kind_all_cards(Number, Card).
                      
                      
 % prompts the user to input the kind of card associated with that index
-prompt_card_kind(1, Card) :- prompt_suspect_character(Card).
-prompt_card_kind(2, Card) :- prompt_suspect_room(Card).
-prompt_card_kind(3, Card) :- prompt_suspect_weapon(Card).
+prompt_card_kind_all_cards(1, Card) :- get_all_characters(Characters), prompt_suspect_character(Characters, Card).
+prompt_card_kind_all_cards(2, Card) :- get_all_rooms(Rooms), prompt_suspect_room(Rooms, Card).
+prompt_card_kind_all_cards(3, Card) :- get_all_weapons(Weapons), prompt_suspect_weapon(Weapons, Card).
+
+
+% prompts the user to input a card from the list of remaining cards
+prompt_card_remaining_cards(Card) :- write('  What kind of card?\n'),
+                                     write('    1) character\n'),
+                                     write('    2) room\n'),
+                                     write('    3) weapon\n'),
+                                     read(Number),
+                                     prompt_card_kind_remaining_cards(Number, Card).
+                               
+                               
+% prompts the user to input the kind of card associated with that index from the list of remaining cards
+prompt_card_kind_remaining_cards(1, Card) :- get_remaining_characters(Characters), prompt_suspect_character(Characters, Card).
+prompt_card_kind_remaining_cards(2, Card) :- get_remaining_rooms(Rooms), prompt_suspect_room(Rooms, Card).
+prompt_card_kind_remaining_cards(3, Card) :- get_remaining_weapons(Weapons), prompt_suspect_weapon(Weapons, Card).
 
 
 % prompts the user to input a character card
-prompt_suspect_character(Character) :- write('  Choose a character:\n'),
-                                       get_all_characters(Characters),
-                                       write_suspect_options(1, Characters),
-                                       read(Index),
-                                       get_suspect(Index, Characters, Character).
+prompt_suspect_character(Characters, Character) :- write('  Choose a character:\n'),
+                                                   write_options(1, Characters),
+                                                   read(Number),
+                                                   Index is Number - 1,
+                                                   element_at(Index, Characters, Character).
                                        
 
 % prompts the user to input a weapon card
-prompt_suspect_weapon(Weapon) :- write('  Choose a weapon:\n'),
-                                 get_all_weapons(Weapons),
-                                 write_suspect_options(1, Weapons),
-                                 read(Index),
-                                 get_suspect(Index, Weapons, Weapon).    
+prompt_suspect_weapon(Weapons, Weapon) :- write('  Choose a weapon:\n'),
+                                          write_options(1, Weapons),
+                                          read(Number),
+                                          Index is Number - 1,
+                                          element_at(Index, Weapons, Weapon).    
                                      
                                      
 % prompts the user to input a room card
-prompt_suspect_room(Room) :- write('  Choose a room:\n'),
-                             get_all_rooms(Rooms),
-                             write_suspect_options(1, Rooms),
-                             read(Index),
-                             get_suspect(Index, Rooms, Room).                                       
+prompt_suspect_room(Rooms, Room) :- write('  Choose a room:\n'),
+                                    write_options(1, Rooms),
+                                    read(Number),
+                                    Index is Number - 1,
+                                    element_at(Index, Rooms, Room).                                       
                                        
-                            
-% gets the suspect card at the given index in the supplied list of suspects
-get_suspect(1, [H|_], Suspect) :- Suspect = H.                            
-get_suspect(Index, [_|T], Suspect) :- NextIndex is Index - 1,
-                                      get_suspect(NextIndex, T, Suspect).
               
-              
-% writes out an option for a suspect list
-write_suspect_option(N, Suspect) :- write('    '), 
-                                    write(N), 
-                                    write(') '), 
-                                    write(Suspect),
-                                    write('\n').
+% writes out an option for a list
+write_option(N, Suspect) :- write('    '), 
+                            write(N), 
+                            write(') '), 
+                            write(Suspect),
+                            write('\n').
                              
 
-% writes out all of the options for a suspect list        
-write_suspect_options(_, []).
-write_suspect_options(N, [H|T]) :- write_suspect_option(N, H),
+% writes out all of the options for a list        
+write_options(_, []).
+write_options(N, [H|T]) :- write_option(N, H),
                                    Next is N + 1,
-                                   write_suspect_options(Next, T).
+                                   write_options(Next, T).
 
 
 
