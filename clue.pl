@@ -235,6 +235,17 @@ process(asked_for) :- prompt_player(Player),
                       write('\n  Player '), write(Player), write(' asked for: '), write(Cards), write('\n\n'),
                       loop.
 
+process(show_remaining_suspects) :- write('\n  Remaining characters:\n'),
+                                    get_remaining_characters(Characters),
+                                    write_cards(Characters),
+                                    write('\n  Remaining rooms:\n'),
+                                    get_remaining_rooms(Rooms),
+                                    write_cards(Rooms),
+                                    write('\n  Remaining weapons:\n'),
+                                    get_remaining_weapons(Weapons),
+                                    write_cards(Weapons),
+                                    write('\n'),
+                                    loop.
 
 % ==========================================================================================================================
 % Player action functions ==================================================================================================
