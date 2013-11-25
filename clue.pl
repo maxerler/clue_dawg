@@ -145,7 +145,7 @@ set_character(end_of_file) :- !.
 set_character(Character) :- character(Character),assert(our_character(Character)).
 
 
-% prompts the user for the names of the other players' characters
+/*% prompts the user for the names of the other players' characters
 prompt_characters :- write('Who are the others characters?\n'),
                     read(Characters),
                     set_characters(Characters).
@@ -154,7 +154,9 @@ prompt_characters :- write('Who are the others characters?\n'),
 % sets the other players' characters
 set_characters(end_of_file) :- !.
 set_characters(Characters) :- atomic_list_concat(L, ' ', Characters),
-                               set_player_characters(L).
+								Index is Number - 1,
+								element_at(Index, Characters, Character),
+								set_player_characters(L).*/
 
 
 % prompts the user for their cards
@@ -293,8 +295,13 @@ remove_suspect(Suspect) :- room(Suspect), !, retract(suspect_room(Suspect)).
 
                                           
 % create players at beginning of game
-set_player_characters([]).
-set_player_characters([H|T]) :- set_player(H),set_player_characters(T).
+set_player_characters([], _).
+set_player_characters([H|T], Characters) :- 
+								atom_number(H, Number),
+								Index is Number - 1,
+								element_at(Index, Characters, Character),
+								set_player(Character),
+								set_player_characters(T, Characters).
 
 % set a character as a player active in the game
 set_player(Character) :- character(Character), assert(player(Character)).
@@ -369,6 +376,18 @@ element_at(Index, [_|T], Elem) :- NextIndex is Index - 1,
 % I/O UI FUNCTIONS =========================================================================================================
 % ==========================================================================================================================
 
+% prompts the user to input the other player's characters
+prompt_characters :- write('\n  Choose other players characters:\n'),
+												   get_all_characters(Characters),
+                                                   write_options(1, Characters),
+                                                   write('\n'),
+                                                   read(SelectedCharacters),
+                                                   set_characters(SelectedCharacters, Characters).
+
+% sets the other players' characters
+set_characters(end_of_file, _) :- !.
+set_characters(SelectedCharacters, Characters) :-  atomic_list_concat(L, ' ', SelectedCharacters),
+												   set_player_characters(L, Characters).
 
 % prompts the user to input a player 
 prompt_player(Player) :- write('\n  Which player?\n'),
