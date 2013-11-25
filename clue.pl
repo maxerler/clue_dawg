@@ -192,14 +192,14 @@ loop :- write('Enter a command:\n'),read(Data),process(Data).
 
 % general process function: dispatches request to handler rule and loops
 process(done) :- !.
-process(Data) :- atomic_list_concat([H|T], ' ', Data), process(H, T),loop.
+%process(Data) :- atomic_list_concat([H|T], ' ', Data), process(H, T),loop.
 
 
 % processes a shown command and keeps track of the cards that player Player has shown us
 process(shown) :- prompt_player(Player),
                   prompt_card_remaining_cards(Card), 
                   player_has_card(Player, Card),
-                  write('  Player '), write(Player), write(' has '), write(Card), write('\n'),
+                  write('\n  Player '), write(Player), write(' has '), write(Card), write('\n\n'),
                   loop.
 
 
@@ -212,19 +212,29 @@ process(is_suspect) :- prompt_card_all_cards(Card),
                        loop.
 
 
+process(show_cards) :- prompt_player(Player),
+                       get_cards_of_player(Player, Cards),
+                       ( Cards == []
+                         -> write('\n  We don\'t know any of this player\'s cards!\n')
+                         ;  write('\n  Player '), write(Player), write(' has:\n'), write_cards(Cards)
+                       ),
+                       write('\n'),
+                       loop. 
+                       
+
 % processes an asked_for command and keeps track of the cards that player Player has asked for
-process('asked_for', [Player, Card1, Card2, Card3]) :- atom_number(Player, Number),
-                                                       player(Number),
-                                                       Cards = [Card1, Card2, Card3],
-                                                       player_asked_for_cards(Number, Cards),
-                                                       write('  Player '), write(Player), 
-                                                       write(' asked for '), write(Cards), write('\n').
-process('asked_for', _) :- write('  Error!\n').
+process(asked_for) :- prompt_player(Player),
+                      get_all_characters(AllCharacters),
+                      prompt_suspect_character(AllCharacters, Character),
+                      get_all_rooms(AllRooms),
+                      prompt_suspect_room(AllRooms, Room),
+                      get_all_weapons(AllWeapons),
+                      prompt_suspect_weapon(AllWeapons, Weapon),
+                      Cards = [Character, Room, Weapon],
+                      player_asked_for_cards(Player, Cards),
+                      write('\n  Player '), write(Player), write(' asked for: '), write(Cards), write('\n\n'),
+                      loop.
 
-
-process('show_cards', [Player]) :- atom_number(Player, Number),
-                                   findall(Card, player_has(Number, Card), Cards),
-                                   write_cards(Cards).
 
 % ==========================================================================================================================
 % Player action functions ==================================================================================================
@@ -305,37 +315,48 @@ set_player_characters([H|T]) :- set_player(H),set_player_characters(T).
 
 % writes out a list of cards
 write_cards([]).
-write_cards([H|T]) :- write('  '),
+write_cards([H|T]) :- write('    '),
                       write(H),
                       write('\n'),
                       write_cards(T).
                       
                       
+% gets a list of all players
 get_all_players(Players) :- findall(Player, player(Player), Players).                      
                       
-                      
+
+% gets a list of all characters
 get_all_characters(Characters) :- findall(Char, character(Char), Characters).           
 
 
+% gets a list of all weapons
 get_all_weapons(Weapons) :- findall(Weapon, weapon(Weapon), Weapons).
 
 
+% gets a list of all rooms
 get_all_rooms(Rooms) :- findall(Room, room(Room), Rooms).           
                       
                       
+% gets a list of the remaining suspect characters
 get_remaining_characters(Characters) :- findall(Char, suspect_character(Char), Characters).           
 
 
+% gets a list of the remaining suspect weapons
 get_remaining_weapons(Weapons) :- findall(Weapon, suspect_weapon(Weapon), Weapons).      
 
 
+% gets a list of the remaining suspect rooms
 get_remaining_rooms(Rooms) :- findall(Room, suspect_room(Room), Rooms). 
      
      
+% gets a list of all of the given player's cards
+get_cards_of_player(Player, Cards) :- findall(Card, player_has(Player, Card), Cards).
+
+     
 % gets the element at the given index in the supplied list
-element_at(0, [H|_], Suspect) :- Suspect = H.                            
-element_at(Index, [_|T], Suspect) :- NextIndex is Index - 1,
-                                     element_at(NextIndex, T, Suspect).
+element_at(0, [H|_], Elem) :- Elem = H.                            
+element_at(Index, [_|T], Elem) :- NextIndex is Index - 1,
+                                  element_at(NextIndex, T, Elem).
 
                       
 % ==========================================================================================================================
