@@ -204,8 +204,12 @@ process(shown) :- prompt_player(Player),
 
 
 % processes a suspect? command and tells whether the given card is still suspected
-process('suspect?', [S]) :- is_suspect(S),write('  Yes\n').
-process('suspect?', _) :- write('  No\n').
+process(is_suspect) :- prompt_card_all_cards(Card),
+                       ( is_suspect(Card)
+                         -> write('\n  Yes.\n\n')
+                         ; write('\n  No.\n\n')
+                       ),
+                       loop.
 
 
 % processes an asked_for command and keeps track of the cards that player Player has asked for
@@ -340,19 +344,20 @@ element_at(Index, [_|T], Suspect) :- NextIndex is Index - 1,
 
 
 % prompts the user to input a player 
-prompt_player(Player) :- write('  Which player?\n'),
+prompt_player(Player) :- write('\n  Which player?\n'),
                          get_all_players(Players),
                          write_options(1, Players),
+                         write('\n'),
                          read(Number),
                          Index is Number - 1,
                          element_at(Index, Players, Player).
 
 
 % prompts the user to input a card
-prompt_card_all_cards(Card) :- write('  What kind of card?\n'),
+prompt_card_all_cards(Card) :- write('\n  What kind of card?\n'),
                                write('    1) character\n'),
                                write('    2) room\n'),
-                               write('    3) weapon\n'),
+                               write('    3) weapon\n\n'),
                                read(Number),
                                prompt_card_kind_all_cards(Number, Card).
                      
@@ -364,10 +369,10 @@ prompt_card_kind_all_cards(3, Card) :- get_all_weapons(Weapons), prompt_suspect_
 
 
 % prompts the user to input a card from the list of remaining cards
-prompt_card_remaining_cards(Card) :- write('  What kind of card?\n'),
+prompt_card_remaining_cards(Card) :- write('\n  What kind of card?\n'),
                                      write('    1) character\n'),
                                      write('    2) room\n'),
-                                     write('    3) weapon\n'),
+                                     write('    3) weapon\n\n'),
                                      read(Number),
                                      prompt_card_kind_remaining_cards(Number, Card).
                                
@@ -379,24 +384,27 @@ prompt_card_kind_remaining_cards(3, Card) :- get_remaining_weapons(Weapons), pro
 
 
 % prompts the user to input a character card
-prompt_suspect_character(Characters, Character) :- write('  Choose a character:\n'),
+prompt_suspect_character(Characters, Character) :- write('\n  Choose a character:\n'),
                                                    write_options(1, Characters),
+                                                   write('\n'),
                                                    read(Number),
                                                    Index is Number - 1,
                                                    element_at(Index, Characters, Character).
                                        
 
 % prompts the user to input a weapon card
-prompt_suspect_weapon(Weapons, Weapon) :- write('  Choose a weapon:\n'),
+prompt_suspect_weapon(Weapons, Weapon) :- write('\n  Choose a weapon:\n'),
                                           write_options(1, Weapons),
+                                          write('\n'),
                                           read(Number),
                                           Index is Number - 1,
                                           element_at(Index, Weapons, Weapon).    
                                      
                                      
 % prompts the user to input a room card
-prompt_suspect_room(Rooms, Room) :- write('  Choose a room:\n'),
+prompt_suspect_room(Rooms, Room) :- write('\n  Choose a room:\n'),
                                     write_options(1, Rooms),
+                                    write('\n'),
                                     read(Number),
                                     Index is Number - 1,
                                     element_at(Index, Rooms, Room).                                       
