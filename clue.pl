@@ -12,6 +12,8 @@ CPSC ID: k8r7
 
 :- dynamic player/1,
 		   num_players/1,
+		   num_cards/1,
+		   my_card/1,
            our_character/1,
            suspect_weapon/1,
            suspect_character/1,
@@ -47,6 +49,10 @@ room(study).
 room(hall).
 room(lounge).
 room(dining_room).
+
+card(X) :- character(X).
+card(X) :- weapon(X).
+card(X) :- room(X).
 
 % ==========================================================================================================================
 % Teardown functions =======================================================================================================
@@ -121,6 +127,7 @@ init :- clear_state,
         prompt_num_players,
         prompt_characters,
         %prompt_character, % I don't think we actually care who we're playing as, so I'll comment this out for now.
+        prompt_num_cards,
         prompt_cards.
 
 
@@ -144,11 +151,21 @@ prompt_character :- write('Who is your character?\n'),
 % sets the user's character
 set_character(end_of_file) :- !.
 set_character(Character) :- character(Character),assert(our_character(Character)).
-
+                
 % prompts the user for their cards
-prompt_cards :- write('What are your cards?\n'),
-                read(Cards),
-                remove_initial_cards(Cards).
+prompt_num_cards :- write('How many cards do you have?\n'),
+                	read(NumCards),
+                	assert(num_cards(NumCards)).
+                
+/* For card prompts, figure out # of cards based on # of players = 18 cards total,
+if 2 players = 9 cards
+if 3 players = 6
+if 4 players = 4 or 5
+if 5 players = 3 or 4
+if 6 players = 3 cards
+
+--> prompt for # cards
+ */
                 
 
 % removes the user's cards from the list of suspects
@@ -284,6 +301,12 @@ set_player(Number, Characters) :- Index is Number - 1,
 								  element_at(Index, Characters, Character),
 								  character(Character),
 								  assert(player(Character)).
+								  
+% set a character as a player active in the game
+set_card(Number, Cards) :- Index is Number - 1,
+								  element_at(Index, Cards, Card),
+								  assert(my_card(Card)),
+								  remove_suspect(Card).
 
 % removes the given card from the list of suspect cards and tracks which player showed us that card
 player_has_card(Player, Card) :- player(Player), remove_suspect(Card), assert(player_has(Player, Card)).
@@ -313,6 +336,9 @@ write_cards([H|T]) :- write('    '),
                       write_cards(T).
                       
                       
+% gets a list of all possible cards (all characters, weapons and rooms)
+get_all_cards(Cards) :- findall(Card, card(Card), Cards).
+
 % gets a list of all players
 get_all_players(Players) :- findall(Player, player(Player), Players).                      
                       
@@ -354,6 +380,21 @@ element_at(Index, [_|T], Elem) :- NextIndex is Index - 1,
 % ==========================================================================================================================
 % I/O UI FUNCTIONS =========================================================================================================
 % ==========================================================================================================================
+
+% prompts the user for their cards
+prompt_cards :- write('What are your cards?\n'),
+				get_all_cards(Cards),
+				write_options(1, Cards),
+                write('\n'),
+                num_cards(Number),
+				get_cards(Number, Cards).
+
+% loop prompts user for their cards based on number of cards specified
+get_cards(0, _).
+get_cards(Number, Cards) :- read(Card),
+								      set_card(Card, Cards),
+								      New is Number - 1,
+								      get_cards(New, Cards).
 
 % prompts the user to input the other player's characters
 prompt_characters :- write('\n  Choose other players\' characters:\n'),
