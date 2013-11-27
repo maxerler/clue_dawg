@@ -19,7 +19,8 @@ CPSC ID: k8r7
            suspect_character/1,
            suspect_room/1,
            player_has/2,
-           player_asked_for/2.
+           player_asked_for/2,
+           order/2.
            
            
 % ==========================================================================================================================
@@ -113,7 +114,8 @@ init_suspect_r :- assert(suspect_room(kitchen)),
 
 
 clue :- init,
-        loop.
+		order(1, Player),
+        loop(Player).
 
 
 % ==========================================================================================================================
@@ -126,9 +128,10 @@ init :- clear_state,
         init_all_suspects,
         prompt_num_players,
         prompt_characters,
-        %prompt_character, % I don't think we actually care who we're playing as, so I'll comment this out for now.
         prompt_num_cards,
-        prompt_cards.
+        prompt_cards,
+        assert(player(self)),
+        prompt_order.
 
 
 % prompts the user for the number of players and sets the player number
@@ -156,17 +159,7 @@ set_character(Character) :- character(Character),assert(our_character(Character)
 prompt_num_cards :- write('How many cards do you have?\n'),
                 	read(NumCards),
                 	assert(num_cards(NumCards)).
-                
-/* For card prompts, figure out # of cards based on # of players = 18 cards total,
-if 2 players = 9 cards
-if 3 players = 6
-if 4 players = 4 or 5
-if 5 players = 3 or 4
-if 6 players = 3 cards
-
---> prompt for # cards
- */
-                
+                        
 
 % removes the user's cards from the list of suspects
 remove_initial_cards(end_of_file) :- !.
@@ -175,10 +168,15 @@ remove_initial_cards(Cards) :- atomic_list_concat(L, ' ', Cards),
                 
 
 % ==========================================================================================================================
-% Loop function ============================================================================================================
+% Loop function for player's turns ============================================================================================================
 % ==========================================================================================================================
 
+% 
+%loop(Player) :- order(
 
+%loop(self) :- prompt_player_options.
+
+% 
 loop :- write('Enter a command:\n'),read(Data),process(Data).
 
 
@@ -410,6 +408,29 @@ get_characters(Number, Characters) :- read(Player),
 								      set_player(Player, Characters),
 								      New is Number - 1,
 								      get_characters(New, Characters).
+
+% prompts the user for the order of play, starting with the player starting the game
+prompt_order :- write('\n  What is the order of play:\n'),
+												   get_all_players(Players),
+                                                   write_options(1, Players),
+                                                   write('\n'),
+                                                   num_players(Number),
+                                                   NumPlayers is Number + 1,
+                                                   get_order(1, NumPlayers, Players).
+                                                   
+% loop prompts user for player character order based on number of players in the game
+get_order(_, 0, _).
+get_order(Count, Number, Players) :- read(Player),
+								      set_order(Player, Players, Count),
+								      New is Number - 1,
+								      NewCount is Count + 1,
+								      get_order(NewCount, New, Players).
+
+% set the order of play (as a list)
+set_order(PlayerNumber, Players, Count) :- Index is PlayerNumber - 1,
+								  		 element_at(Index, Players, Player),
+								  		 player(Player),
+										 assert(order(Count, Player)).
 
 % prompts the user to input a player 
 prompt_player(Player) :- write('\n  Which player?\n'),
